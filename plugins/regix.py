@@ -118,36 +118,38 @@ async def pub_(bot, message):
         await stop(client, user)
             
 async def copy(bot, msg, m, sts):
-   try:  
-     # Check if the message is part of a media album
-     if msg.get("media_group_id"):
-         # Fetch all messages in the album
-         album_messages = await bot.get_media_group(sts.get('FROM'), msg.get("msg_id"))
-         # Send the album as a group
-         await bot.send_media_group(chat_id=sts.get('TO'), media=album_messages)
-     elif msg.get("media") and msg.get("caption"):
-        await bot.send_cached_media(
-              chat_id=sts.get('TO'),
-              file_id=msg.get("media"),
-              caption=msg.get("caption"),
-              reply_markup=msg.get('button'),
-              protect_content=msg.get("protect"))
-     else:
-        await bot.copy_message(
-              chat_id=sts.get('TO'),
-              from_chat_id=sts.get('FROM'),    
-              caption=msg.get("caption"),
-              message_id=msg.get("msg_id"),
-              reply_markup=msg.get('button'),
-              protect_content=msg.get("protect"))
-   except FloodWait as e:
-     await edit(m, 'Progressing', e.value, sts)
-     await asyncio.sleep(e.value)
-     await edit(m, 'Progressing', 10, sts)
-     await copy(bot, msg, m, sts)
-   except Exception as e:
-     print(e)
-     sts.add('deleted')
+    try:
+        # Periksa apakah pesan adalah bagian dari album media
+        if msg.get("media_group_id"):
+            # Ambil semua pesan dalam album
+            album_messages = await bot.get_media_group(sts.get('FROM'), msg.get("msg_id"))
+            # Kirim album sebagai satu kesatuan
+            await bot.send_media_group(chat_id=sts.get('TO'), media=album_messages)
+        else:
+            # Tangani pesan yang bukan bagian dari album
+            if msg.get("media") and msg.get("caption"):
+                await bot.send_cached_media(
+                    chat_id=sts.get('TO'),
+                    file_id=msg.get("media"),
+                    caption=msg.get("caption"),
+                    reply_markup=msg.get('button'),
+                    protect_content=msg.get("protect"))
+            else:
+                await bot.copy_message(
+                    chat_id=sts.get('TO'),
+                    from_chat_id=sts.get('FROM'),
+                    caption=msg.get("caption"),
+                    message_id=msg.get("msg_id"),
+                    reply_markup=msg.get('button'),
+                    protect_content=msg.get("protect"))
+    except FloodWait as e:
+        await edit(m, 'Progressing', e.value, sts)
+        await asyncio.sleep(e.value)
+        await edit(m, 'Progressing', 10, sts)
+        await copy(bot, msg, m, sts)
+    except Exception as e:
+        print(e)
+        sts.add('deleted')
         
 async def forward(bot, msg, m, sts, protect):
    try:                             
