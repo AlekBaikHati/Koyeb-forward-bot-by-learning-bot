@@ -118,8 +118,14 @@ async def pub_(bot, message):
         await stop(client, user)
             
 async def copy(bot, msg, m, sts):
-   try:                                  
-     if msg.get("media") and msg.get("caption"):
+   try:  
+     # Check if the message is part of a media album
+     if msg.get("media_group_id"):
+         # Fetch all messages in the album
+         album_messages = await bot.get_media_group(sts.get('FROM'), msg.get("msg_id"))
+         # Send the album as a group
+         await bot.send_media_group(chat_id=sts.get('TO'), media=album_messages)
+     elif msg.get("media") and msg.get("caption"):
         await bot.send_cached_media(
               chat_id=sts.get('TO'),
               file_id=msg.get("media"),
