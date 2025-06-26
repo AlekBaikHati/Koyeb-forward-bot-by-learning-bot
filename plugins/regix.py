@@ -140,8 +140,7 @@ async def pub_(bot, message):
                     sts.add('total_files')
                     await asyncio.sleep(sleep)
         except Exception as e:
-            await msg_edit(m, f'<b>Error :</b>\n<code>{e}</code>')
-<code>{e}</code>', wait=True)
+            await msg_edit(m, f'<b>Error :</b>\n<code>{e}</code>', wait=True)
             temp.IS_FRWD_CHAT.remove(sts.TO)
             return await stop(client, user)
         temp.IS_FRWD_CHAT.remove(sts.TO)
