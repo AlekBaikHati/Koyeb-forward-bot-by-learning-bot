@@ -12,7 +12,7 @@ from translation import Translation
 from pyrogram import Client, filters 
 #from pyropatch.utils import unpack_new_file_id
 from pyrogram.errors import FloodWait, MessageNotModified, RPCError
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message 
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message, InputMediaPhoto, InputMediaVideo
 
 CLIENT = CLIENT()
 logger = logging.getLogger(__name__)
@@ -158,10 +158,19 @@ async def forward(bot, msg_ids, m, sts, protect):
         
         # Periksa apakah pesan adalah bagian dari album media
         if messages and messages[0].media_group_id:
+            # Konversi pesan menjadi InputMedia
+            media = []
+            for message in messages:
+                if message.photo:
+                    media.append(InputMediaPhoto(message.photo.file_id, caption=message.caption))
+                elif message.video:
+                    media.append(InputMediaVideo(message.video.file_id, caption=message.caption))
+                # Tambahkan tipe media lain jika diperlukan
+
             # Kirim album sebagai satu kesatuan
             await bot.send_media_group(
                 chat_id=sts.get('TO'),
-                media=messages,  # Pastikan messages berisi objek media yang benar
+                media=media,
                 protect_content=protect
             )
         else:
