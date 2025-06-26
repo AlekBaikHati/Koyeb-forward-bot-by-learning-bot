@@ -45,7 +45,7 @@ async def pub_(bot, message):
     try:
         await client.get_messages(sts.get("FROM"), sts.get("limit"))
     except:
-        await msg_edit(m, f"Source Chat May Be A Private Channel / Group. Use Userbot (User Must Be Member Over There) Or  If Make Your [Bot](t.me/{_bot['username']}) An Admin Over There", retry_btn(frwd_id), True)
+        await msg_edit(m, f"Source Chat May Be A Private Channel / Group. Use Userbot (User Must Be Member Over There) Or Make Your [Bot](t.me/{_bot['username']}) An Admin Over There", retry_btn(frwd_id), True)
         return await stop(client, user)
     try:
         k = await client.send_message(i.TO, "Testing")
@@ -70,9 +70,7 @@ async def pub_(bot, message):
             group_timeout = 2
 
             await edit(m, 'Progressing', 10, sts)
-            print(f"Starting Forwarding Process... From :{sts.get('FROM')} To: {sts.get('TO')} Totel: {sts.get('limit')} Stats : {sts.get('skip')})")
             async for message in client.iter_messages(
-                client,
                 chat_id=sts.get('FROM'),
                 limit=int(sts.get('limit')),
                 offset=int(sts.get('skip')) if sts.get('skip') else 0
@@ -110,6 +108,9 @@ async def pub_(bot, message):
                             album = []
                             for msg in reversed(group_msgs):
                                 new_caption = custom_caption(msg, caption)
+                                if forward_tag:
+                                    src = sts.get("FROM")
+                                    new_caption = f"#From `{src}`\n\n" + (new_caption or "")
                                 media_item = {
                                     "msg_id": msg.id,
                                     "media": media(msg),
@@ -135,7 +136,16 @@ async def pub_(bot, message):
                         MSG = []
                 else:
                     new_caption = custom_caption(message, caption)
-                    details = {"msg_id": message.id, "media": media(message), "caption": new_caption, 'button': button, "protect": protect}
+                    if forward_tag:
+                        src = sts.get("FROM")
+                        new_caption = f"#From `{src}`\n\n" + (new_caption or "")
+                    details = {
+                        "msg_id": message.id,
+                        "media": media(message),
+                        "caption": new_caption,
+                        'button': button,
+                        "protect": protect
+                    }
                     await copy(client, details, m, sts)
                     sts.add('total_files')
                     await asyncio.sleep(sleep)
@@ -147,6 +157,7 @@ async def pub_(bot, message):
         await send(client, user, "🎉 Forwarding Completed")
         await edit(m, 'Completed', "completed", sts)
         await stop(client, user)
+
 
 async def copy_album(bot, album_msgs, m, sts):
     media_list = []
