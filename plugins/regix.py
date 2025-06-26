@@ -161,19 +161,19 @@ async def forward(bot, msg_ids, m, sts, protect):
             # Konversi pesan menjadi InputMedia
             media = []
             for message in messages:
+                new_caption = custom_caption(message, message.caption)
                 if message.photo:
-                    media.append(InputMediaPhoto(message.photo.file_id, caption=message.caption))
+                    media.append(InputMediaPhoto(message.photo.file_id, caption=new_caption))
                 elif message.video:
-                    media.append(InputMediaVideo(message.video.file_id, caption=message.caption))
+                    media.append(InputMediaVideo(message.video.file_id, caption=new_caption))
                 # Tambahkan tipe media lain jika diperlukan
 
-            # Kirim album sebagai batch jika terlalu panjang
-            for i in range(0, len(media), 10):
-                await bot.send_media_group(
-                    chat_id=sts.get('TO'),
-                    media=media[i:i + 10],  # Kirim maksimal 10 item per batch
-                    protect_content=protect
-                )
+            # Kirim album sebagai satu kesatuan
+            await bot.send_media_group(
+                chat_id=sts.get('TO'),
+                media=media,
+                protect_content=protect
+            )
         else:
             # Kirim pesan satu per satu jika bukan album media
             await bot.forward_messages(
