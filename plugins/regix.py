@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 TEXT = Translation.TEXT
 
-
+ 
 
 
 
@@ -153,11 +153,21 @@ async def copy(bot, msg, m, sts):
         
 async def forward(bot, msg, m, sts, protect):
    try:                             
-     await bot.forward_messages(
-           chat_id=sts.get('TO'),
-           from_chat_id=sts.get('FROM'), 
-           protect_content=protect,
-           message_ids=msg)
+     # Periksa apakah pesan adalah bagian dari album media
+     if msg[0].media_group_id:
+         # Kirim album sebagai satu kesatuan
+         await bot.send_media_group(
+               chat_id=sts.get('TO'),
+               from_chat_id=sts.get('FROM'), 
+               protect_content=protect,
+               message_ids=msg)
+     else:
+         # Kirim pesan satu per satu jika bukan album media
+         await bot.forward_messages(
+               chat_id=sts.get('TO'),
+               from_chat_id=sts.get('FROM'), 
+               protect_content=protect,
+               message_ids=msg)
    except FloodWait as e:
      await edit(m, 'Progressing', e.value, sts)
      await asyncio.sleep(e.value)
