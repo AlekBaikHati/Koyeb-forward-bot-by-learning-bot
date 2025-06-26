@@ -112,7 +112,7 @@ async def pub_(bot, message):
                 continue
 
             if media_groups and time.time() - last_group_time > group_timeout:
-                for group_msgs in media_groups.values():
+                for group_id, group_msgs in media_groups.items():
                     if forward_tag:
                         MSG.extend([m.id for m in group_msgs])
                         await forward(client, MSG, m, sts, protect)
@@ -136,6 +136,7 @@ async def pub_(bot, message):
                         await asyncio.sleep(sleep)
                 media_groups.clear()
                 continue
+
 
             if forward_tag:
                 MSG.append(message.id)
@@ -201,42 +202,42 @@ async def copy_album(bot, album_msgs, m, sts):
     except Exception as e:
         print("Album Copy Error:", e)
         sts.add("deleted")
+
         
 async def forward(bot, msg_ids, m, sts, protect):
     try:
-        # Dapatkan objek pesan dari ID pesan
         messages = await bot.get_messages(chat_id=sts.get('FROM'), message_ids=msg_ids)
-        
-        # Periksa apakah pesan adalah bagian dari album media
+        caption_template = sts.get("caption")
         if messages and messages[0].media_group_id:
-            # Konversi pesan menjadi InputMedia
             media = []
-            for message in messages:
-                new_caption = custom_caption(message, message.caption)
+            for idx, message in enumerate(messages):
+                new_caption = custom_caption(message, caption_template) if idx == 0 else None
+                file_id = media(message)
+                if not file_id:
+                    continue
                 if message.photo:
-                    media.append(InputMediaPhoto(message.photo.file_id, caption=new_caption))
+                    media.append(InputMediaPhoto(file_id, caption=new_caption))
                 elif message.video:
-                    media.append(InputMediaVideo(message.video.file_id, caption=new_caption))
-                # Tambahkan tipe media lain jika diperlukan
-
-            # Kirim album sebagai satu kesatuan
+                    media.append(InputMediaVideo(file_id, caption=new_caption))
+                elif message.document:
+                    media.append(InputMediaDocument(file_id, caption=new_caption))
+                elif message.audio:
+                    media.append(InputMediaAudio(file_id, caption=new_caption))
             await bot.send_media_group(
-                chat_id=sts.get('TO'),
+                chat_id=sts.get("TO"),
                 media=media,
                 protect_content=protect
             )
         else:
-            # Kirim pesan satu per satu jika bukan album media
             await bot.forward_messages(
                 chat_id=sts.get('TO'),
                 from_chat_id=sts.get('FROM'), 
-                protect_content=protect,
-                message_ids=msg_ids
+                message_ids=msg_ids,
+                protect_content=protect
             )
     except FloodWait as e:
         await edit(m, 'Progressing', e.value, sts)
         await asyncio.sleep(e.value)
-        await edit(m, 'Progressing', 10, sts)
         await forward(bot, msg_ids, m, sts, protect)
 
 PROGRESS = """
