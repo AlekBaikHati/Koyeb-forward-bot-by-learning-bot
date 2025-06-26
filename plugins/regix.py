@@ -151,28 +151,31 @@ async def copy(bot, msg, m, sts):
         print(e)
         sts.add('deleted')
         
-async def forward(bot, msg, m, sts, protect):
-   try:                             
-     # Periksa apakah pesan adalah bagian dari album media
-     if msg[0].media_group_id:
-         # Kirim album sebagai satu kesatuan
-         await bot.send_media_group(
-               chat_id=sts.get('TO'),
-               from_chat_id=sts.get('FROM'), 
-               protect_content=protect,
-               message_ids=msg)
-     else:
-         # Kirim pesan satu per satu jika bukan album media
-         await bot.forward_messages(
-               chat_id=sts.get('TO'),
-               from_chat_id=sts.get('FROM'), 
-               protect_content=protect,
-               message_ids=msg)
-   except FloodWait as e:
-     await edit(m, 'Progressing', e.value, sts)
-     await asyncio.sleep(e.value)
-     await edit(m, 'Progressing', 10, sts)
-     await forward(bot, msg, m, sts, protect)
+async def forward(bot, msg_ids, m, sts, protect):
+    try:
+        # Dapatkan objek pesan dari ID pesan
+        messages = await bot.get_messages(chat_id=sts.get('FROM'), message_ids=msg_ids)
+        
+        # Periksa apakah pesan adalah bagian dari album media
+        if messages and messages[0].media_group_id:
+            # Kirim album sebagai satu kesatuan
+            await bot.send_media_group(
+                chat_id=sts.get('TO'),
+                from_chat_id=sts.get('FROM'), 
+                protect_content=protect,
+                message_ids=msg_ids)
+        else:
+            # Kirim pesan satu per satu jika bukan album media
+            await bot.forward_messages(
+                chat_id=sts.get('TO'),
+                from_chat_id=sts.get('FROM'), 
+                protect_content=protect,
+                message_ids=msg_ids)
+    except FloodWait as e:
+        await edit(m, 'Progressing', e.value, sts)
+        await asyncio.sleep(e.value)
+        await edit(m, 'Progressing', 10, sts)
+        await forward(bot, msg_ids, m, sts, protect)
 
 PROGRESS = """
 📈 Percetage : {0} %
