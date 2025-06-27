@@ -46,7 +46,7 @@ async def run(bot, message):
         await message.reply(Translation.CANCEL)
         return 
     if fromid.text and not fromid.forward_date:
-        regex = re.compile(r"(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")
+        regex = re.compile(r"(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(+)$")
         match = regex.match(fromid.text.replace("?single", ""))
         if not match:
             return await message.reply('Invalid Link')
@@ -72,7 +72,10 @@ async def run(bot, message):
         return await message.reply('Invalid Link Specified.')
     except Exception as e:
         return await message.reply(f'Errors - {e}')
-    skipno = await bot.ask(message.chat.id, Translation.SKIP_MSG)
+    skip_buttons = [[InlineKeyboardButton('Lewati 0', callback_data='skip_0'),
+                     InlineKeyboardButton('Lewati 5', callback_data='skip_5'),
+                     InlineKeyboardButton('Lewati 10', callback_data='skip_10')]]
+    skipno = await bot.ask(message.chat.id, "Atur Jumlah Pesan yang Dilewati\n\nLewati pesan sebanyak angka yang Anda masukkan, sisanya akan diteruskan.\nLewati default = 0\ncth: Masukkan 0 = tidak ada yang dilewati\nMasukkan 5 = 5 pesan dilewati\n/cancel - Untuk membatalkan proses ini", reply_markup=InlineKeyboardMarkup(skip_buttons))
     if skipno.text.startswith('/'):
         await message.reply(Translation.CANCEL)
         return
